@@ -10,10 +10,9 @@ class World(object):
     game_field = [[]]
     alive_marker = '#'
     dead_marker = ' '
-    width = 30
-    height = 30
+    width = 40
+    height = 20
     fill_percentage = 25
-    idle = 1000
     borders = True
     cycle_delay = 100
 
@@ -71,53 +70,35 @@ class World(object):
         return changed
 
     def checkCell(self, cell):
-        aliveNeighbors = 0
+        alive_neighbors = self.getAliveNeighbors(cell)
 
-
-        # needs 2 + 3 to stay alive
-        for x in range(-1, 2):
-            row = cell.getPosX() + x
-
-            # check wether the used row is in the grid or not
-            if self.borders is True:
-                if row < 0 or row >= self.height:
-                    # row out of bounce
-                    continue
-            else:
-                # caluclate row values if borders are not used
-                if row > self.height:
-                    row = row - self.height
-                elif row < 0:
-                    row = self.height - row
-
-            for y in range(-1, 2):
-                column = cell.getPosY() + y
-
-                # check if new coords are in grid
-                if self.borders is True:
-                    if column < 0 or column >= self.width:
-                        # column out of bounce
-                        continue
-                else:
-                    # calculate column values if borders are not used
-                    if column > self.width:
-                        column = column - self.width
-                    elif column < 0:
-                        column = self.width - column
-
-                if self.game_field[row][column].isAlive() and \
-                   self.game_field[row][column] is not cell:
-                    aliveNeighbors += 1
-
-                # raw_input('waiting...')
-
-        if cell.isAlive():
-            if aliveNeighbors is not 2 and aliveNeighbors is not 3:
-                cell.kill()
-                return 1
-        else:
-            if aliveNeighbors is 3:
-                cell.reborn()
-                return 1
+        if cell.isAlive() and (alive_neighbors is not 2 and alive_neighbors is not 3):
+            cell.kill()
+            return 1
+        elif cell.isDead() and alive_neighbors is 3:
+            cell.reborn()
+            return 1
 
         return 0
+
+    def getAliveNeighbors(self, cell):
+        alive_neighbors = 0
+
+        for row in (range(cell.getPosX()-1, cell.getPosX()+2)):
+            if self.borders is True:
+                if row < 0 or row >= self.height:
+                    continue
+            else:
+                row = row % self.height
+
+            for column in (range(cell.getPosY()-1, cell.getPosY()+2)):
+                if self.borders is True:
+                    if column < 0 or column >= self.width:
+                        continue
+                else:
+                    column = column % self.width
+
+                if self.game_field[row][column].isAlive() and self.game_field[row][column] is not cell:
+                    alive_neighbors += 1
+
+        return alive_neighbors
